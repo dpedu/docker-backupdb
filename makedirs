@@ -1,0 +1,8 @@
+#!/bin/sh
+
+mkdir -p /nexus/datadb/tmp /nexus/datadb/backups
+
+chown nexus:nexus \
+    /nexus/datadb \
+    /nexus/datadb/tmp \
+    /nexus/datadb/backups

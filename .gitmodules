@@ -1,0 +1,3 @@
+[submodule "backupdb-scripts"]
+	path = backupdb-scripts
+	url = ssh://git@gitlab.davepedu.com:222/dave/datadb-scripts.git

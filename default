@@ -1,0 +1,25 @@
+server {
+    listen 80 default_server;
+    #listen [::]:80 default_server ipv6only=on;
+
+    root /nexus/;
+
+    index index.html index.htm;
+    server_name localhost;
+    client_body_temp_path /nexus/datadb/tmp/;
+
+    location / {
+        autoindex on;
+        try_files $uri $uri/ =404;
+    }
+    location /cgi-bin/ {
+        alias /usr/share/backupdb/;
+        gzip off;
+        fastcgi_pass  unix:/tmp/fcgiwrap.socket;
+        include /etc/nginx/fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME  /usr/share/backupdb$fastcgi_script_name;
+        fastcgi_read_timeout 600s;
+        fastcgi_send_timeout 600s;
+        client_max_body_size 4096m;
+    }
+}
