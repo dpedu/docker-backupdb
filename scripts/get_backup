@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+
+import traceback
+import os
+from sys import exit, stdout
+from os.path import join as pathjoin
+from os.path import getsize
+from nexus.cgi import parse_qs, parse_auth, start_response
+from common.datadb import get_latest_backup
+
+
+def handle_head(backup_name):
+    try:
+        # backup_path = get_latest_backup(backup_name)
+        # TODO appropriate content-length for HEAD
+        start_response(extra_headers=['Content-length: 0'])
+    except:
+        start_response(status_code=("404", "Not Found",), extra_headers=['Content-length: 0'])
+    exit(0)
+
+
+def handle_get_rsync(backup_name):
+    """
+    Prints the absolute path an rsync backup should pull from
+    """
+    backup_path = get_latest_backup(backup_name)
+
+    start_response()
+    print(backup_path + '/')
+
+
+def handle_get_archive(backup_name):
+    """
+    Returns .tar.gz data to the browser
+    """
+    backup_path = pathjoin(get_latest_backup(backup_name), 'backup.tar.gz')
+
+    with open(backup_path, 'rb') as f:
+        start_response(content_type="application/x-gzip",
+                       extra_headers=["Content-length: %s" % getsize(backup_path),
+                                      "Content-Disposition: attachment; filename=\"backup.tar.gz\""])
+        while True:
+            data = f.read(8192)
+            if not data:
+                break
+            stdout.buffer.write(data)
+    exit(0)
+
+
+def handle_req():
+    """
+    Parse http query parameters and act accordingly.
+    """
+    params = parse_qs()
+
+    for param_name in ["proto", "name"]:
+        if param_name not in params:
+            raise Exception("Missing parameter: %s" % param_name)
+
+    if os.environ['REQUEST_METHOD'] == "GET" and params["proto"] == "rsync":
+        # Should return absolute local path to latest backup dir
+        handle_get_rsync(params["name"])
+
+    elif os.environ['REQUEST_METHOD'] == "GET" and params["proto"] == "archive":
+        # Should respond by transferring tar.gz data
+        handle_get_archive(params["name"])
+
+    elif os.environ['REQUEST_METHOD'] == "HEAD":
+        # Respond with 200 or 404 depending if backup exists
+        # TODO: deeper inspection so the headers can be flushed out
+        handle_head(params["name"])
+
+    else:
+        raise Exception("Invalid request. Params: %s" % params)
+
+
+if __name__ == "__main__":
+    try:
+        handle_req()
+    except Exception as e:
+        start_response(status_code=("500", "Internal server error"))
+
+        tb = traceback.format_exc()
+        print(tb)
+

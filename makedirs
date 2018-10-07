@@ -1,8 +1,8 @@
 #!/bin/sh
 
-mkdir -p /nexus/datadb/tmp /nexus/datadb/backups
+mkdir -p /data/data/datadb/tmp /data/data/datadb/backups
 
 chown nexus:nexus \
-    /nexus/datadb \
-    /nexus/datadb/tmp \
-    /nexus/datadb/backups
+    /data/data/datadb \
+    /data/data/datadb/tmp \
+    /data/data/datadb/backups
