@@ -1,0 +1,1 @@
+0 * * * * root find /data/data/datadb/tmp/ -mtime +7 -exec rm -rvf {} \;
